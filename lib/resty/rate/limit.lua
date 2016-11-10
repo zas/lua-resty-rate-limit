@@ -99,20 +99,20 @@ function _M.limit(config)
             return
         end
 
-        if zone ~= nil and zone ~= "" then
-            ngx.header["X-RateLimit-Zone"] = zone
-        end
         if response.count > rate then
             local retry_after = math.floor(response.reset - current_time)
             if retry_after < 0 then
                 retry_after = 0
             end
 
-            ngx.header["Access-Control-Allow-Origin"] = "*"
             ngx.header["Retry-After"] = retry_after
+            if zone ~= nil and zone ~= "" then
+                ngx.header["X-RateLimit-Zone"] = zone
+            end
             if return_status then
                 return _M.OVER
             end
+            ngx.header["Access-Control-Allow-Origin"] = "*"
             ngx.header["Content-Type"] = "application/json; charset=utf-8"
             ngx.status = 429
             ngx.say('{"status_code":25,"status_message":"Your request count (' .. response.count .. ') is over the allowed limit of ' .. rate .. '."}')
