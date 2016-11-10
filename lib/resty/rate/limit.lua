@@ -1,4 +1,4 @@
-_M = { _VERSION = "1.0", OK = 1, OVER = 2 }
+_M = { _VERSION = "1.0", OVER = 1 }
 
 local reset = 0
 
@@ -107,7 +107,7 @@ function _M.limit(config)
             ngx.header["Access-Control-Allow-Origin"] = "*"
             ngx.header["Retry-After"] = retry_after
             if return_status then
-                return { _M.OVER, retry_after, response.count }
+                return _M.OVER
             end
             ngx.header["Content-Type"] = "application/json; charset=utf-8"
             ngx.status = 429
@@ -117,9 +117,6 @@ function _M.limit(config)
             ngx.header["X-RateLimit-Limit"] = rate
             ngx.header["X-RateLimit-Remaining"] = math.floor(response.remaining)
             ngx.header["X-RateLimit-Reset"] = math.floor(response.reset)
-            if return_status then
-                return { _M.OK }
-            end
         end
     else
         return
