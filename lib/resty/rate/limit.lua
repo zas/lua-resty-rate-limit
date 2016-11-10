@@ -91,6 +91,7 @@ function _M.limit(config)
         local key = config.key or ngx.var.remote_addr
         local rate = config.rate or 10
         local interval = config.interval or 1
+        local return_status = config.return_status or nil
 
         local response, error = bump_request(connection, redis_pool_size, key, rate, interval, current_time, log_level)
         if not response then
@@ -104,8 +105,11 @@ function _M.limit(config)
             end
 
             ngx.header["Access-Control-Allow-Origin"] = "*"
-            ngx.header["Content-Type"] = "application/json; charset=utf-8"
             ngx.header["Retry-After"] = retry_after
+            if return_status then
+                return { retry_after, response.count }
+            end
+            ngx.header["Content-Type"] = "application/json; charset=utf-8"
             ngx.status = 429
             ngx.say('{"status_code":25,"status_message":"Your request count (' .. response.count .. ') is over the allowed limit of ' .. rate .. '."}')
             ngx.exit(ngx.HTTP_OK)
