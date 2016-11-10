@@ -92,14 +92,14 @@ function _M.limit(config)
         local rate = config.rate or 10
         local interval = config.interval or 1
         local return_status = config.return_status or false
-        local zone = config.zone or ""
+        local zone = config.zone or nil
 
         local response, error = bump_request(connection, redis_pool_size, key, rate, interval, current_time, log_level, zone)
         if not response then
             return
         end
 
-        if zone != "" then
+        if zone ~= nil and zone ~= "" then
             ngx.header["X-RateLimit-Zone"] = zone
         end
         if response.count > rate then
