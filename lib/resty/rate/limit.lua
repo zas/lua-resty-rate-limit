@@ -10,8 +10,8 @@ local function expire_key(redis_connection, key, interval, log_level)
     end
 end
 
-local function bump_request(redis_connection, redis_pool_size, ip_key, rate, interval, current_time, log_level)
-    local key = "RL:" .. ip_key
+local function bump_request(redis_connection, redis_pool_size, ip_key, rate, interval, current_time, log_level, zone)
+    local key = "RL:" .. ip_key .. zone
 
     local count, error = redis_connection:incr(key)
     if not count then
@@ -92,12 +92,16 @@ function _M.limit(config)
         local rate = config.rate or 10
         local interval = config.interval or 1
         local return_status = config.return_status or false
+        local zone = config.zone or ""
 
-        local response, error = bump_request(connection, redis_pool_size, key, rate, interval, current_time, log_level)
+        local response, error = bump_request(connection, redis_pool_size, key, rate, interval, current_time, log_level, zone)
         if not response then
             return
         end
 
+        if zone != "" then
+            ngx.header["X-RateLimit-Zone"] = zone
+        end
         if response.count > rate then
             local retry_after = math.floor(response.reset - current_time)
             if retry_after < 0 then
